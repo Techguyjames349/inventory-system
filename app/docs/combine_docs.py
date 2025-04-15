@@ -1,4 +1,4 @@
-# Combines prompt.md and all history_*.md files in chronological order for provisioning or /info route.
+# Combines prompt.md and all history_*.md files in reverse chronological order for provisioning or /info route.
 import os
 import glob
 import re
@@ -7,12 +7,12 @@ docs_dir = os.path.dirname(__file__)
 prompt_file = os.path.join(docs_dir, 'prompt.md')
 history_files = glob.glob(os.path.join(docs_dir, 'history_*.md'))
 
-# Sort history files by date in filename (e.g., history_2025-04-09.md)
+# Sort history files by date in filename (reverse order: newest first)
 def sort_history_files(files):
     def extract_date(filename):
         match = re.search(r'history_(\d{4}-\d{2}-\d{2})\.md', filename)
-        return match.group(1) if match else '9999-99-99'  # Fallback for invalid names
-    return sorted(files, key=extract_date)
+        return match.group(1) if match else '0000-00-00'  # Fallback for invalid names
+    return sorted(files, key=extract_date, reverse=True)
 
 def combine_docs():
     output = []
@@ -22,7 +22,7 @@ def combine_docs():
             output.append(f.read())
     except Exception as e:
         output.append(f"Error reading {prompt_file}: {str(e)}")
-    # Add history files in chronological order
+    # Add history files in reverse chronological order
     for history_file in sort_history_files(history_files):
         try:
             with open(history_file, 'r', encoding='utf-8') as f:
