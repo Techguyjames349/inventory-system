@@ -1,3 +1,6 @@
+# Legacy system_info.py, archived in Step 98 (April 15, 2025)
+# Original content moved to prompt.md and daily history files (history_2025-04-09.md, history_2025-04-10.md, history_2025-04-15.md).
+# Refer to app/docs/prompt.md for provisioning and app/docs/history_*.md for updates.
 SYSTEM_INFO = """
 ### Inventory System - Comprehensive Prompt with Direction (April 15, 2025)
 

@@ -13,7 +13,7 @@ This system streamlines inventory management for school assets. It allows admini
 Built with Flask, Flask-SQLAlchemy, SQLite, and Bootstrap 5.3, it’s designed for scalability, with potential for Google Cloud Platform migration.
 
 ## Status
-Actively developed as of April 15, 2025 (Step 98). Detailed documentation is available in `app/docs/prompt.md` (core guidelines) and `app/docs/history.md` (update log).
+Actively developed as of April 15, 2025 (Step 98). Detailed documentation is available in `app/docs/prompt.md` (core guidelines) and daily history files (e.g., `app/docs/history_2025-04-15.md`) for updates.
 
 ## Next Steps
-Refer to `app/docs/prompt.md` for development guidelines and `app/docs/history.md` for the latest changes.
+Refer to `app/docs/prompt.md` for development guidelines and daily history files for the latest changes.
