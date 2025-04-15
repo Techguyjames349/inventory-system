@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Item Details{% endblock %}
+{% block content %}
+<h1 class="mb-4">Item Details</h1>
+{% if item %}
+    <table class="table table-bordered">
+        <tr><th>Barcode</th><td>{{ item.barcode }}</td></tr>
+        <tr><th>Serial Number</th><td>{{ item.serial_number or 'N/A' }}</td></tr>
+        <tr><th>Model</th><td>{{ item.model or 'N/A' }}</td></tr>
+        <tr><th>Type</th><td>{{ item.type }}</td></tr>
+        {% if item.type == 'chromebook' %}
+            <tr><th>Provisioned Date</th><td>{{ item.provisioned_date or 'Not Set' }}</td></tr>
+            <tr><th>Refresh Date</th><td>{{ item.refresh_date or 'Not Set' }}</td></tr>
+            <tr><th>Received Date</th><td>{{ item.received_date or 'Not Set' }}</td></tr>
+            <tr><th>Overall Condition</th><td>{{ item.overall_condition }}</td></tr>
+            {% if item.overall_condition == 'Damaged Beyond Repair' %}
+                <tr><th>Disposition</th><td>{{ item.disposition or 'Not Set' }}</td></tr>
+            {% endif %}
+            <tr><th>Bezel Condition</th><td>{{ item.bezel_condition }}</td></tr>
+            <tr><th>Hinge Cap</th><td>{{ item.hinge_cap }}</td></tr>
+            <tr><th>Current Student</th><td>{{ current_student.first_name + ' ' + current_student.last_name + ' (' + item.student_barcode + ')' if current_student else 'Unassigned' }}</td></tr>
+        {% else %}
+            <tr><th>Condition</th><td>{{ item.condition or 'Not Set' }}</td></tr>
+            <tr><th>Received Date</th><td>{{ item.received_date or 'Not Set' }}</td></tr>
+            <tr><th>Current Student</th><td>{{ current_student.first_name + ' ' + current_student.last_name + ' (' + item.student_barcode + ')' if current_student else 'Unassigned' }}</td></tr>
+        {% endif %}
+    </table>
+    <div class="mb-3">
+        {% if item.type == 'chromebook' %}
+            {% if not item.current_student_id %}
+                <form method="GET" action="/items/checkout/{{ item.barcode }}" class="d-inline">
+                    <button type="submit" class="btn btn-primary">Check Out</button>
+                </form>
+            {% else %}
+                <form method="POST" action="/items/checkin/{{ item.barcode }}" class="d-inline">
+                    <button type="submit" class="btn btn-warning">Check In</button>
+                </form>
+            {% endif %}
+        {% endif %}
+        <button class="btn btn-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteItemModal">Remove Item</button>
+    </div>
+    {% if item.type == 'chromebook' and assignments %}
+        <h2 class="mt-4">Assignment History</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Grade at Checkout</th>
+                    <th>Checkout Date</th>
+                    <th>Checkin Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for assignment in assignments %}
+                    <tr>
+                        <td>{{ assignment.student.first_name + ' ' + assignment.student.last_name }} ({{ assignment.student_barcode }})</td>
+                        <td>{{ assignment.grade_at_checkout or 'Not Recorded' }}</td>
+                        <td>{{ assignment.checkout_date }}</td>
+                        <td>{{ assignment.checkin_date or 'Active' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Delete Item Modal -->
+    <div class="modal fade" id="deleteItemModal" tabindex="-1" aria-labelledby="deleteItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteItemModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete this item (Barcode: {{ item.barcode }})? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="/items/delete/{{ item.id }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <p class="alert alert-warning">Item not found.</p>
+{% endif %}
+{% endblock %}

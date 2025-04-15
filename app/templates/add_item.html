@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Add Item{% endblock %}
+{% block content %}
+<h1 class="mb-4">Add New Item</h1>
+<form method="POST">
+    <div class="mb-3">
+        <label for="item_type" class="form-label">Item Type</label>
+        <select name="item_type" id="item_type" class="form-select" onchange="toggleFields()">
+            <option value="chromebook">Chromebook</option>
+            <option value="power_adapter">Power Adapter</option>
+            <option value="bag">Bag</option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="barcode" class="form-label">Barcode</label>
+        <input type="text" name="barcode" id="barcode" class="form-control" value="{{ next_barcode }}" readonly>
+    </div>
+    
+    <!-- Fields that change based on item type -->
+    <div id="serial_model_fields">
+        <div class="mb-3">
+            <label for="serial_number" class="form-label">Serial Number</label>
+            <input type="text" name="serial_number" id="serial_number" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="model" class="form-label">Model</label>
+            <input type="text" name="model" id="model" class="form-control" required>
+        </div>
+    </div>
+    
+    <!-- Common fields for all non-Chromebook items -->
+    <div id="common_fields">
+        <div class="mb-3">
+            <label for="condition" class="form-label">Condition</label>
+            <select name="condition" id="condition" class="form-select">
+                <option value="New">New</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Very Good">Very Good</option>
+                <option value="Good">Good</option>
+                <option value="Fair">Fair</option>
+                <option value="Poor">Poor</option>
+                <option value="Damaged">Damaged</option>
+                <option value="Unknown">Unknown</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="received_date" class="form-label">Received Date</label>
+            <input type="date" name="received_date" id="received_date" class="form-control" value="{{ today }}">
+        </div>
+    </div>
+    
+    <!-- Chromebook-specific fields -->
+    <div id="chromebook_fields">
+        <div class="mb-3">
+            <label for="overall_condition" class="form-label">Overall Condition</label>
+            <select name="overall_condition" id="overall_condition" class="form-select" onchange="toggleDisposition()">
+                <option value="New">New</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Very Good">Very Good</option>
+                <option value="Good">Good</option>
+                <option value="Damaged - Usable">Damaged - Usable</option>
+                <option value="Needs Repair">Needs Repair</option>
+                <option value="Damaged Beyond Repair">Damaged Beyond Repair</option>
+                <option value="Retired">Retired</option>
+                <option value="Lost/Stolen">Lost/Stolen</option>
+                <option value="Unknown">Unknown</option>
+            </select>
+        </div>
+        <div class="mb-3" id="disposition_field" style="display: none;">
+            <label for="disposition" class="form-label">Disposition</label>
+            <select name="disposition" id="disposition" class="form-select">
+                <option value="For Parts">For Parts</option>
+                <option value="Disposed">Disposed</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="bezel_condition" class="form-label">Bezel Condition</label>
+            <select name="bezel_condition" id="bezel_condition" class="form-select">
+                <option value="New">New</option>
+                <option value="Good">Good</option>
+                <option value="Damaged - Usable">Damaged - Usable</option>
+                <option value="Broken">Broken</option>
+                <option value="Missing">Missing</option>
+                <option value="Unknown">Unknown</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="hinge_cap" class="form-label">Hinge Cap Status</label>
+            <select name="hinge_cap" id="hinge_cap" class="form-select">
+                <option value="New">New</option>
+                <option value="Good">Good</option>
+                <option value="Damaged">Damaged</option>
+                <option value="Missing">Missing</option>
+                <option value="Unknown">Unknown</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="provisioned_date" class="form-label">Provisioned Date</label>
+            <input type="date" name="provisioned_date" id="provisioned_date" class="form-control" value="{{ today }}">
+        </div>
+        <div class="mb-3">
+            <label for="received_date" class="form-label">Received Date</label>
+            <input type="date" name="received_date" id="received_date" class="form-control" value="{{ today }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Refresh Date Option</label>
+            <div class="form-check">
+                <input type="radio" name="refresh_option" value="auto" class="form-check-input" checked onclick="toggleRefresh()">
+                <label class="form-check-label">Auto (5 years from Received Date)</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" name="refresh_option" value="manual" class="form-check-input" onclick="toggleRefresh()">
+                <label class="form-check-label">Manual</label>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="refresh_date" class="form-label">Refresh Date</label>
+            <input type="date" name="refresh_date" id="refresh_date" class="form-control" disabled>
+        </div>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Add Item</button>
+</form>
+<script>
+    function toggleFields() {
+        var type = document.getElementById('item_type').value;
+        
+        // Show/hide Chromebook-specific fields
+        document.getElementById('chromebook_fields').style.display = type === 'chromebook' ? 'block' : 'none';
+        
+        // Show/hide common fields (only for non-Chromebook items)
+        document.getElementById('common_fields').style.display = type === 'chromebook' ? 'none' : 'block';
+        
+        // Handle serial and model fields for bags (which don't have them)
+        document.getElementById('serial_model_fields').style.display = type === 'bag' ? 'none' : 'block';
+        
+        // Update required attributes for serial and model
+        var serialInput = document.getElementById('serial_number');
+        var modelInput = document.getElementById('model');
+        
+        if (type === 'bag') {
+            serialInput.required = false;
+            modelInput.required = false;
+        } else {
+            serialInput.required = true;
+            modelInput.required = true;
+        }
+        
+        // Update the barcode prefix based on the item type
+        updateBarcode();
+        
+        // Check if disposition should be shown
+        toggleDisposition();
+    }
+    
+    function updateBarcode() {
+        var type = document.getElementById('item_type').value;
+        var prefix = {
+            'chromebook': 'USD349-CB-',
+            'power_adapter': 'USD349-PWR-',
+            'bag': 'USD349-BAG-'
+        }[type] || 'USD349-';
+        
+        // For simplicity, we'll keep the numeric part static here; server will handle the correct ID
+        var currentBarcode = document.getElementById('barcode').value;
+        var numericPart = currentBarcode.split('-').pop();
+        document.getElementById('barcode').value = prefix + numericPart;
+    }
+    
+    function toggleRefresh() {
+        var option = document.querySelector('input[name="refresh_option"]:checked').value;
+        var refreshDate = document.getElementById('refresh_date');
+        refreshDate.disabled = option === 'auto';
+        if (option === 'auto') {
+            var received = document.getElementById('received_date').value || '{{ today }}';
+            var date = new Date(received);
+            date.setFullYear(date.getFullYear() + 5);
+            refreshDate.value = date.toISOString().split('T')[0];
+        }
+    }
+    
+    function toggleDisposition() {
+        var condition = document.getElementById('overall_condition').value;
+        document.getElementById('disposition_field').style.display = condition === 'Damaged Beyond Repair' ? 'block' : 'none';
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleFields();
+        toggleRefresh();
+    });
+</script>
+{% endblock %}

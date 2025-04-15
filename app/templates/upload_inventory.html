@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Upload Inventory{% endblock %}
+{% block content %}
+<h1 class="mb-4">Upload Inventory CSV</h1>
+<p>Upload a CSV file with columns: barcode, serial_number, model, type, received_date (YYYY-MM-DD). For Chromebooks, include: overall_condition, bezel_condition, hinge_cap, refresh_date (YYYY-MM-DD).</p>
+<form method="POST" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label for="file" class="form-label">Select CSV File</label>
+        <input type="file" name="file" id="file" class="form-control" accept=".csv" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+{% endblock %}
