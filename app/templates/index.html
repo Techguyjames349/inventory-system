@@ -1,107 +1,93 @@
 {% extends "base.html" %}
-{% block title %}Inventory Home{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-4" style="color: #A6192E; font-weight: 700;">Inventory Dashboard</h1>
-
-    <!-- Search Card -->
-    <div class="card shadow-lg border-0 mb-5" style="border-radius: 15px; overflow: hidden;">
-        <div class="card-header" style="background: #A6192E; color: #FFFFFF; padding: 1rem 1.5rem;">
-            <h5 class="mb-0">Search Items</h5>
-        </div>
-        <div class="card-body p-4" style="background: #FFFFFF;">
-            <form method="GET" action="{{ url_for('item.lookup') }}" class="row g-3">
-                <div class="col-md-4">
-                    <select name="lookup_type" class="form-select shadow-sm" style="border-color: #A6192E; border-radius: 10px;">
-                        <option value="barcode">Barcode</option>
-                        <option value="serial">Serial Number</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <input type="text" name="identifier" class="form-control shadow-sm" placeholder="Enter barcode or serial number" style="border-color: #A6192E; border-radius: 10px;" required>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn w-100" style="background: #A6192E; color: #FFFFFF; border-radius: 10px;">Lookup</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Item List Card -->
-    <div class="card shadow-lg border-0" style="border-radius: 15px; overflow: hidden;">
-        <div class="card-header d-flex justify-content-between align-items-center" style="background: #000000; color: #FFFFFF; padding: 1rem 1.5rem;">
-            <h5 class="mb-0">Item Inventory (Total: {{ item_data|length }})</h5>
+<div class="container mt-3">
+    <div class="card shadow">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Item Inventory</h5>
             <div>
-                <a href="{{ url_for('item.add') }}" class="btn btn-sm" style="background: #A6192E; color: #FFFFFF; border-radius: 10px;">Add Item</a>
-                <a href="{{ url_for('item.upload_inventory') }}" class="btn btn-sm" style="background: #A6192E; color: #FFFFFF; border-radius: 10px;">Upload CSV</a>
-                <a href="{{ url_for('item.export_inventory') }}" class="btn btn-sm" style="background: #A6192E; color: #FFFFFF; border-radius: 10px;">Export CSV</a>
+                <a href="{{ url_for('item.upload_inventory') }}" class="btn btn-sm btn-primary">Upload Inventory CSV</a>
+                <a href="{{ url_for('item.export_inventory') }}" class="btn btn-sm btn-secondary">Export Inventory CSV</a>
+                <button id="toggleFilters" class="btn btn-sm btn-info">Toggle Filters</button>
+                <button id="clearFilters" class="btn btn-sm btn-warning">Clear All Filters</button>
             </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead style="background: #A6192E; color: #FFFFFF;">
-                        <tr>
-                            <th>Barcode</th>
-                            <th>Model</th>
-                            <th>Serial Number</th>
-                            <th>Condition</th>
-                            <th>Assigned To</th>
-                            <th>Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for data in item_data %}
-                            <tr>
-                                <td><a href="{{ url_for('item.lookup', lookup_type='barcode', identifier=data.item.barcode) }}" style="color: #A6192E; text-decoration: none;">{{ data.item.barcode }}</a></td>
-                                <td>{{ data.item.model or 'N/A' }}</td>
-                                <td>{{ data.item.serial_number or 'N/A' }}</td>
-                                <td>{{ data.item.overall_condition or data.item.condition or 'Unknown' }}</td>
-                                <td>{{ data.current_student_name }}</td>
-                                <td>{{ data.item.type }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="card-body">
+            <p>Total Items: {{ total_items }}</p>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <form method="GET" action="{{ url_for('item.lookup') }}">
+                        <div class="input-group">
+                            <select name="lookup_type" class="form-select">
+                                <option value="barcode">Barcode</option>
+                                <option value="serial">Serial Number</option>
+                            </select>
+                            <input type="text" name="identifier" class="form-control" placeholder="Search...">
+                            <button type="submit" class="btn btn-primary">Lookup</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="{{ url_for('item.add_item') }}" class="btn btn-sm" style="background: #A6192E; color: #FFFFFF; border-radius: 10px;">Add Item</a>
+                </div>
             </div>
+            <div id="filterRow" style="display: none;">
+                <div class="row mb-3">
+                    <div class="col">
+                        <input type="text" id="barcodeFilter" class="form-control" placeholder="Filter by Barcode">
+                    </div>
+                    <div class="col">
+                        <input type="text" id="modelFilter" class="form-control" placeholder="Filter by Model">
+                    </div>
+                    <div class="col">
+                        <input type="text" id="serialFilter" class="form-control" placeholder="Filter by Serial Number">
+                    </div>
+                    <div class="col">
+                        <select id="conditionFilter" class="form-select">
+                            <option value="">Filter by Condition</option>
+                            {% for condition in conditions %}
+                            <option value="{{ condition }}">{{ condition }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col">
+                        <input type="text" id="assignedFilter" class="form-control" placeholder="Filter by Assigned To">
+                    </div>
+                    <div class="col">
+                        <select id="typeFilter" class="form-select">
+                            <option value="">Filter by Type</option>
+                            {% for type in types %}
+                            <option value="{{ type }}">{{ type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col" data-sort="barcode">Barcode</th>
+                        <th scope="col" data-sort="model">Model</th>
+                        <th scope="col" data-sort="serial">Serial Number</th>
+                        <th scope="col" data-sort="condition">Overall Condition</th>
+                        <th scope="col" data-sort="assigned">Assigned To</th>
+                        <th scope="col" data-sort="type">Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><a href="{{ url_for('item.lookup', lookup_type='barcode', identifier=item.barcode) }}">{{ item.barcode }}</a></td>
+                        <td>{{ item.model }}</td>
+                        <td>{{ item.serial_number }}</td>
+                        <td>{{ item.overall_condition }}</td>
+                        <td>{{ item.current_student.first_name + ' ' + item.current_student.last_name if item.current_student else 'Unassigned' }}</td>
+                        <td>{{ item.type }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-
-<style>
-    body {
-        background: #F8F9FA;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-    .card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
-    }
-    .form-control, .form-select {
-        border: 2px solid #A6192E;
-        border-radius: 10px;
-        transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #000000;
-        box-shadow: 0 0 0 0.25rem rgba(166, 25, 46, 0.25);
-    }
-    .btn {
-        transition: background 0.3s ease, transform 0.2s ease;
-    }
-    .btn:hover {
-        background: #000000;
-        transform: scale(1.05);
-    }
-    .table th, .table td {
-        vertical-align: middle;
-        padding: 1rem;
-    }
-    .table-hover tbody tr:hover {
-        background: #F1F1F1;
-    }
-</style>
+<script src="{{ url_for('static', filename='js/inventory.js') }}"></script>
 {% endblock %}
