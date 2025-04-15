@@ -23,10 +23,12 @@ def combine_docs():
     except Exception as e:
         output.append(f"Error reading {prompt_file}: {str(e)}")
     # Add history files in reverse chronological order
-    for history_file in sort_history_files(history_files):
+    sorted_files = sort_history_files(history_files)
+    for history_file in sorted_files:
         try:
             with open(history_file, 'r', encoding='utf-8') as f:
                 output.append(f.read())
+            print(f"Combined: {history_file}")  # Debug log
         except Exception as e:
             output.append(f"Error reading {history_file}: {str(e)}")
     return '\n\n'.join(output)

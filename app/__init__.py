@@ -26,25 +26,13 @@ def create_app():
 
     @app.route('/info')
     def system_info():
-        # Combine prompt.md and history_*.md files in reverse chronological order
-        docs_dir = os.path.join(app.root_path, 'docs')
-        prompt_file = os.path.join(docs_dir, 'prompt.md')
-        history_files = sorted(glob.glob(os.path.join(docs_dir, 'history_*.md')), reverse=True)
-        content = []
-        # Add prompt
+        # Read only prompt.md for display
+        prompt_file = os.path.join(app.root_path, 'docs', 'prompt.md')
         try:
             with open(prompt_file, 'r', encoding='utf-8') as f:
-                content.append(f.read())
+                system_info_content = f.read()
         except Exception as e:
-            content.append(f"Error reading {prompt_file}: {str(e)}")
-        # Add history files
-        for history_file in history_files:
-            try:
-                with open(history_file, 'r', encoding='utf-8') as f:
-                    content.append(f.read())
-            except Exception as e:
-                content.append(f"Error reading {history_file}: {str(e)}")
-        system_info_content = '\n\n'.join(content)
+            system_info_content = f"Error reading {prompt_file}: {str(e)}"
         return render_template('system_info.html', system_info=system_info_content)
 
     return app
