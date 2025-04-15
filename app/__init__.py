@@ -1,30 +1,38 @@
-from flask import Flask, redirect, url_for, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from app.config import Config
-from app.system_info import SYSTEM_INFO
+import os
 
 db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object('app.config.Config')
+    
     db.init_app(app)
-
-    from app.models.item import Item, Chromebook
-    from app.models.student import Student
-    from app.models.assignment import Assignment
-
+    
     from app.routes.item_routes import item_bp
     from app.routes.student_routes import student_bp
-    app.register_blueprint(item_bp, url_prefix='/items')
-    app.register_blueprint(student_bp, url_prefix='/students')
-
+    app.register_blueprint(item_bp)
+    app.register_blueprint(student_bp)
+    
     @app.route('/')
-    def root():
-        return redirect(url_for('item.home'))
-
+    def index():
+        return redirect(url_for('item.items'))
+    
     @app.route('/info')
     def system_info():
-        return render_template('system_info.html', system_info=SYSTEM_INFO)
-
+        # Combine prompt.md and history.md for display
+        docs_dir = os.path.join(app.root_path, 'docs')
+        prompt_file = os.path.join(docs_dir, 'prompt.md')
+        history_file = os.path.join(docs_dir, 'history.md')
+        content = []
+        for file_path in [prompt_file, history_file]:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content.append(f.read())
+            except Exception as e:
+                content.append(f"Error reading {file_path}: {str(e)}")
+        system_info_content = '\n\n'.join(content)
+        return render_template('system_info.html', system_info=system_info_content)
+    
     return app
